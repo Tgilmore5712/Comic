@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inkforge Studio
 
-## Getting Started
+Inkforge Studio is a continuity-first comic book creator built with Next.js. It keeps story rules, character voice, long-form arcs, issue outlines, and panel-level continuity notes in one workspace so you can develop a series without losing consistency.
 
-First, run the development server:
+## What is included
+
+- A polished editorial dashboard for comic development
+- A series bible with editable story rules and hook
+- A character bible focused on voice, goals, fears, and recurring details
+- Arc tracking for long-form plotlines
+- An issue room with beat sheets and panel planning
+- A continuity radar that warns about missing structure or character anchors
+- Browser persistence with `localStorage` so edits survive refreshes locally
+- JSON export and import for moving story bibles between machines or checkpoints
+- A local writers-room assist that generates an issue pass from the current story bible
+- An optional API-backed writers-room assist using any OpenAI-compatible provider, with local fallback
+- Prompt-pack export for sending issue-ready panel prompts to external image tools at low cost
+- A style-guide layer that tunes both story generation and exported prompt packs
+- Provider presets for cheap model routing without editing code
+- Panel image slots for attaching generated or approved art back to each panel
+- Prompt review mode that flags continuity or export-risk issues before handoff
+- Gallery view that groups attached panel art by issue and page
+- Revision history for each panel image slot
+- One-click bundled export that combines handoff script, prompt pack, and attached images
+
+## Getting started
+
+Install dependencies if needed:
+
+```bash
+npm install
+```
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` in a browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Working with projects
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Use `Export JSON` in the series capsule to download the current comic project.
+- Use `Import JSON` to restore a previously exported Inkforge project file.
+- Use `Writers room assist` in the issue room to generate a hook, theme, summary, beats, and starter panel notes for the active issue.
+- Use `Export prompt pack` to generate panel-by-panel image prompts from the active issue and continuity notes.
+- Use the story bible `Style guide` fields to lock visual language before generating scripts or prompts.
+- Use the `AI provider` controls to choose a cheap preset or add a model override.
+- Use `Review prompt pack` before export to catch continuity or asset gaps.
+- Use each panel `Image slot` to attach approved art, track status, and save notes.
+- Use `Open gallery` to review attached art grouped by issue and page.
+- Use `Save revision` on a panel to snapshot the current image, notes, and status before making changes.
+- Use `Export bundle` to download a single issue package containing the handoff, prompt pack, and attached images.
 
-## Learn More
+The assist feature is local and deterministic. It does not require an external model API, and it stays constrained by the current character voices, goals, rules, and open arcs.
 
-To learn more about Next.js, take a look at the following resources:
+## Recommended low-cost workflow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For the best power-to-cost ratio, use Inkforge as the main editor and planning system:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Build the story bible, cast bible, arcs, and issues inside the editor.
+2. Use `Writers room assist` to draft or redraft issues while preserving continuity.
+3. Export the handoff or prompt pack for downstream art generation.
+4. Use any cheap or free external image tool for panel art instead of locking the app to one expensive image stack.
 
-## Deploy on Vercel
+This repo is now organized around that editor-first workflow. The shared continuity engine lives in `src/lib/comic-engine.ts`, and both the browser UI and the `/api/generate-issue` route use the same story logic.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Low-cost AI setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If you want stronger generation without changing the app architecture, configure an OpenAI-compatible API in `.env.local`.
+
+Start from `.env.example` and set:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL=openai/gpt-4.1-mini
+```
+
+That setup gives you a concrete low-cost provider path out of the box. You can still point `OPENAI_BASE_URL` at any other compatible provider. The app upgrades `Writers room assist` from local generation to server-backed generation when configured, and falls back automatically if the provider is unavailable.
+
+## Prompt tuning
+
+Inkforge now pushes the style guide through both the server prompt and the exported prompt pack. That means your issue planning and downstream panel-image prompts stay aligned on:
+
+- visual style
+- linework
+- color mood
+- camera language
+- lettering direction
+- reference notes for consistency
+
+## Editor workflow additions
+
+- `AI provider`: choose a cheap preset such as OpenRouter or Groq-compatible routing without changing application code.
+- `Review prompt pack`: shows warnings and infos before you export prompts for downstream image generation.
+- `Image slot`: each panel now stores an image URL or uploaded preview, a status (`Planned`, `Generating`, `Ready`), and production notes.
+- `Gallery view`: scans the whole project for attached panel art and presents it grouped by issue and page.
+- `Revision history`: lets you keep multiple image attempts per panel and restore an older one.
+- `Bundle export`: creates a single self-contained issue package for handoff or review.
+
+## Validation
+
+The current setup has been verified with:
+
+```bash
+npm run lint
+npm run build
+```
+
+## Tech stack
+
+- Next.js 16 with the App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+
+## Likely next steps
+
+1. Add project export and import for JSON story bibles.
+2. Persist projects in a real database instead of browser storage.
+3. Add AI-assisted beat generation constrained by the character bible.
+4. Add printable page and panel templates for artist handoff.
