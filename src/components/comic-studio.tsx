@@ -23,6 +23,41 @@ import {
 } from "@/lib/comic-engine";
 
 const storageKey = "inkforge-studio-project";
+const requiredProjectKeys = [
+  "title",
+  "logline",
+  "tone",
+  "genre",
+  "seriesPromise",
+  "hook",
+  "styleGuide",
+  "aiSettings",
+  "imagePrep",
+  "codex",
+  "rules",
+  "characters",
+  "arcs",
+  "issues",
+] as const;
+
+function describeImportIssue(payload: unknown, error: unknown) {
+  if (error instanceof SyntaxError) {
+    return `Import failed: invalid JSON syntax (${error.message}).`;
+  }
+
+  if (payload && typeof payload === "object") {
+    const available = payload as Record<string, unknown>;
+    const missing = requiredProjectKeys.filter((key) => !(key in available));
+
+    if (missing.length > 0) {
+      return `Import failed: missing required fields (${missing.join(", ")}).`;
+    }
+
+    return "Import failed: file shape is close but not a valid Inkforge project.";
+  }
+
+  return "Import failed: root JSON value must be an object.";
+}
 
 export function ComicStudio() {
   const [project, setProject] = useState<ComicProject>(() => {
@@ -115,6 +150,7 @@ export function ComicStudio() {
 
   async function importProject(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    let parsed: unknown;
 
     if (!file) {
       return;
@@ -122,18 +158,18 @@ export function ComicStudio() {
 
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text) as unknown;
+      parsed = JSON.parse(text) as unknown;
 
       if (!isComicProject(parsed)) {
-        throw new Error("The JSON file does not match the Inkforge project format.");
+        throw new Error("Invalid Inkforge project shape.");
       }
 
       const nextProject = sanitizeProject(parsed);
       setProject(nextProject);
       setActiveIssueIndex(0);
       setStudioMessage(`Imported ${nextProject.title}.`);
-    } catch {
-      setStudioMessage("Import failed. Use a valid Inkforge project JSON file.");
+    } catch (error) {
+      setStudioMessage(describeImportIssue(parsed, error));
     } finally {
       event.target.value = "";
     }
