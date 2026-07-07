@@ -76,9 +76,31 @@ Start from `.env.example` and set:
 OPENAI_API_KEY=your_api_key_here
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=openai/gpt-4.1-mini
+OPENAI_SITE_URL=https://your-production-domain.example
+OPENAI_SITE_NAME=Inkforge Studio
+OPENAI_TIMEOUT_MS=45000
 ```
 
 That setup gives you a concrete low-cost provider path out of the box. You can still point `OPENAI_BASE_URL` at any other compatible provider. The app upgrades `Writers room assist` from local generation to server-backed generation when configured, and falls back automatically if the provider is unavailable.
+
+## Production AI environment variables
+
+For a hosted deployment, configure these server-side environment variables in your platform dashboard instead of committing secrets:
+
+- `OPENAI_API_KEY`: required to enable remote writers-room assist.
+- `OPENAI_BASE_URL`: optional override for any OpenAI-compatible provider endpoint.
+- `OPENAI_MODEL`: optional default model if you do not want to rely on preset defaults.
+- `OPENAI_SITE_URL`: optional site URL header for providers such as OpenRouter.
+- `OPENAI_SITE_NAME`: optional app name header for provider attribution.
+- `OPENAI_TIMEOUT_MS`: optional request timeout in milliseconds before the API route falls back to the local continuity engine.
+
+For Vercel specifically:
+
+1. Open the project settings for your deployed site.
+2. Add the variables above under `Environment Variables` for `Production`.
+3. Redeploy so the server route picks up the new values.
+
+Do not expose these as `NEXT_PUBLIC_*` variables. The AI key is only needed by the server route in `src/app/api/generate-issue/route.ts`.
 
 ## Prompt tuning
 

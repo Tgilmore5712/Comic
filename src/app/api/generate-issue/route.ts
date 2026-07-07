@@ -10,6 +10,16 @@ import {
   sanitizeProject,
 } from "@/lib/comic-engine";
 
+function readTimeoutMs() {
+  const value = Number(process.env.OPENAI_TIMEOUT_MS ?? "45000");
+
+  if (!Number.isFinite(value) || value < 1000) {
+    return 45000;
+  }
+
+  return Math.floor(value);
+}
+
 async function generateWithModel(project: ComicProject, issue: Issue) {
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -28,12 +38,25 @@ async function generateWithModel(project: ComicProject, issue: Issue) {
     process.env.OPENAI_MODEL ||
     preset?.model ||
     "gpt-5.4";
+  const siteUrl = process.env.OPENAI_SITE_URL?.trim();
+  const siteName = process.env.OPENAI_SITE_NAME?.trim();
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  });
+
+  if (siteUrl) {
+    headers.set("HTTP-Referer", siteUrl);
+  }
+
+  if (siteName) {
+    headers.set("X-Title", siteName);
+  }
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers,
+    signal: AbortSignal.timeout(readTimeoutMs()),
     body: JSON.stringify({
       model,
       response_format: { type: "json_object" },
